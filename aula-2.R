@@ -1,11 +1,9 @@
 # aula 2 - 15-08-2023
 
 # pacotes
-install.packages("data.table")
-install.packages('ribge')
+# install.packages("data.table")
 
 library(data.table)
-
 library(tidyverse)
 library(stringr)
 
@@ -87,3 +85,72 @@ df <- pib_cid %>%
             pib_medio_uf = mean(pib_total),
             pib_uf_mediana = median(pib_total))
 
+
+# gráficos
+
+pib_cid %>%
+  ggplot(aes(y = pib_total, 
+             x = impostos)) + 
+  geom_point() +
+  geom_smooth(method = 'lm')
+
+# gráficos  mais bonitos
+
+
+pib_cid %>%
+  ggplot(aes(y = pib_total, 
+             x = impostos)) + 
+  geom_point() +
+  geom_smooth(method = "lm") +
+  scale_y_continuous(labels = scales::dollar) + 
+  scale_x_continuous(labels = scales::dollar) + 
+  theme_light() + 
+  theme(text = element_text(size = 20)) +
+  xlab("impostos municipais") + 
+  ggtitle("PIB municipal de 2013 x impostos municipais")
+
+
+# gráficos ainda mais bonitos
+
+install.packages("remotes")
+
+remotes::install_github("MatthewBJane/theme_park")
+
+library(ThemePark)
+
+pib_cid %>%
+  ggplot(aes(y=pib_total, x=impostos)) + 
+  geom_point() +
+  scale_y_continuous(labels = scales::dollar) + 
+  theme(text=element_text(size=20)) + 
+  theme_ +
+  xlab("impostos municipais") + 
+  ggtitle("PIB municipal de 2013 x impostos municipais")
+
+
+# com bbc
+
+install.packages('devtools')
+devtools::install_github('bbc/bbplot')
+library(bbplot)
+
+pib_cid %>%
+  ggplot(aes(y=pib_total, x=impostos)) + 
+  geom_point() +
+  scale_y_continuous(labels = scales::dollar) + 
+  theme(text=element_text(size=20)) + 
+  bbplot::bbc_style() +
+  xlab("impostos municipais") + 
+  ggtitle("PIB municipal de 2013 x impostos municipais")
+
+
+
+# Histograma
+
+
+pib_cid %>%
+  ggplot(aes(x=pib_per_capita)) + 
+  geom_histogram() +
+  theme_light() + 
+  theme(text=element_text(size=20)) + 
+  ggtitle("PIB per capita municipal")
