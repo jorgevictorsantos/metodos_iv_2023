@@ -40,3 +40,5 @@ acoes <- data.frame(
 acoes
 
 
+
+
