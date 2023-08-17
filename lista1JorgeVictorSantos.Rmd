@@ -1,0 +1,62 @@
+---
+title: "Lista 1"
+author: "Jorge Victor Bernardes dos Santos"
+date: "2023-08-17"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### **Exercício I**
+
+O pacote ribge permite importar bases de dados diretamente para o environment do R. Primeiro, instale e ative o pacote. Depois, importe os dados de 2020 por meio do c´odigo abaixo.
+
+```{r}
+install.packages("devtools")
+devtools::install_github("tbrugz/ribge")
+library(ribge)
+pop2020 <- populacao_municipios(2020)
+
+```
+
+Qual é a unidade de análise desse banco de dados?
+
+Por meio da função `head()`, função base do R, podemos observar que a unidade de análise desse banco são os municípios do Brasil, isto é, cada observação corresponde a um município em 2020.
+
+```{r}
+head(pop2020, 10)
+
+```
+
+### **Exercício II**
+
+Para este exercício e os posteriores, vamos analisar apenas dados relativos ao estado de São Paulo. Selecione apenas as observações referentes ao estado de São Paulo. Isso é equivalente a remover da base as observações relativas a outros estados brasileiros.
+
+Antes da análise, limpe a base de dados conforme os seguintes passos:
+
+(i) remova as variáveis "codigo uf" e "populacao str",
+
+(ii) renomeie "nome munic" para "municipio" e
+
+(iii) para todos os nomes de municipios contidos na sua nova variável municipio, coloque todos os caracteres em letra minuscula.
+
+Quantos municípios há no estado de São Paulo? Qual é o menor município do estado? Quantos habitantes ele tem?
+
+```{r}
+pop2020SPLimpa <- pop2020 %>% 
+  dplyr::select(-c(codigo_uf, populacao_str)) %>% 
+  rename(municipio = nome_munic) %>% 
+  mutate(municipio = toupper(municipio)) %>% 
+  dplyr::filter(uf == "SP")
+
+dim(pop2020SPLimpa)
+
+pop2020SPLimpa %>% 
+  dplyr::filter(populacao == min(populacao))
+
+```
+
+Pela função `dim()`, que nos dá as dimensões da base de dados, observamos que há 645 municípios no estado de São Paulo. 
+Ao filtrar a observação com menor número de habitantes, vemos que o menor município de São Paulo, em relação à população, é Borá, com 838 habitantes.
