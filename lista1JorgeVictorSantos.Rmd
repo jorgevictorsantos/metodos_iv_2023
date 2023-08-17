@@ -1,21 +1,17 @@
 ---
 title: "Lista 1"
-author: "Jorge Victor Bernardes dos Santos"
+author: "Jorge Victor Bernardes dos Santos - 11250038"
 date: "2023-08-17"
 output: pdf_document
 ---
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
 
 ### **Exercício I**
 
 O pacote ribge permite importar bases de dados diretamente para o environment do R. Primeiro, instale e ative o pacote. Depois, importe os dados de 2020 por meio do c´odigo abaixo.
 
 ```{r}
-install.packages("devtools")
-devtools::install_github("tbrugz/ribge")
+# install.packages("devtools")
+# devtools::install_github("tbrugz/ribge")
 library(ribge)
 pop2020 <- populacao_municipios(2020)
 
@@ -45,18 +41,33 @@ Antes da análise, limpe a base de dados conforme os seguintes passos:
 Quantos municípios há no estado de São Paulo? Qual é o menor município do estado? Quantos habitantes ele tem?
 
 ```{r}
-pop2020SPLimpa <- pop2020 %>% 
+library(tidyverse)
+pop2020Limpa <- pop2020 %>% 
   dplyr::select(-c(codigo_uf, populacao_str)) %>% 
   rename(municipio = nome_munic) %>% 
-  mutate(municipio = toupper(municipio)) %>% 
-  dplyr::filter(uf == "SP")
+  mutate(municipio = toupper(municipio))
 
 dim(pop2020SPLimpa)
 
-pop2020SPLimpa %>% 
-  dplyr::filter(populacao == min(populacao))
+pop2020Limpa %>%
+  dplyr::filter(uf == 'SP') %>% 
+  dplyr::filter(populacao == min(populacao)) %>% 
+  head()
 
 ```
 
-Pela função `dim()`, que nos dá as dimensões da base de dados, observamos que há 645 municípios no estado de São Paulo. 
-Ao filtrar a observação com menor número de habitantes, vemos que o menor município de São Paulo, em relação à população, é Borá, com 838 habitantes.
+Pela função `dim()`, que nos dá as dimensões da base de dados, observamos que há 645 municípios no estado de São Paulo. Ao filtrar a observação com menor número de habitantes, vemos que o menor município de São Paulo, em relação à população, é Borá, com 838 habitantes.
+
+### **Exercício III**
+
+Agora vamos utilizar estatísticas para conhecer as caracterısticas de nossa base de dados, especialmente da variavel "populacao". Para a variavel "populacao", calcule: (i) a media, (ii) a mediana, (iii) o desvio padrao e (iv) a variancia.
+
+```{r}
+
+pop2020Limpa %>% 
+  reframe(media_pop = mean(populacao, na.rm = T),
+          mediana_pop = median(populacao, na.rm = T),
+          desvio_pop = sd(populacao, na.rm = T),
+          var_pop = var(populacao, na.rm = T))
+
+```
