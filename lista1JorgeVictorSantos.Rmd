@@ -1,13 +1,13 @@
 ---
-title: "Lista 1"
+title: "Métodos Quantitativos IV - Lista 1"
 author: "Jorge Victor Bernardes dos Santos - 11250038"
-date: "2023-08-17"
+date: "2023-08-20"
 output: pdf_document
 ---
 
 ### **Exercício I**
 
-O pacote ribge permite importar bases de dados diretamente para o environment do R. Primeiro, instale e ative o pacote. Depois, importe os dados de 2020 por meio do c´odigo abaixo.
+O pacote ribge permite importar bases de dados diretamente para o environment do R. Primeiro, instale e ative o pacote. Depois, importe os dados de 2020 por meio do codigo abaixo.
 
 ```{r}
 # install.packages("devtools")
@@ -41,22 +41,28 @@ Antes da análise, limpe a base de dados conforme os seguintes passos:
 Quantos municípios há no estado de São Paulo? Qual é o menor município do estado? Quantos habitantes ele tem?
 
 ```{r}
+# install.packages('tidyverse')
 library(tidyverse)
-pop2020Limpa <- pop2020 %>% 
+
+pop2020SP <- pop2020 %>% 
   dplyr::select(-c(codigo_uf, populacao_str)) %>% 
   rename(municipio = nome_munic) %>% 
-  mutate(municipio = toupper(municipio))
+  mutate(municipio = toupper(municipio)) %>% 
+  dplyr::filter(uf == 'SP')
 
-dim(pop2020SPLimpa)
-
-pop2020Limpa %>%
-  dplyr::filter(uf == 'SP') %>% 
-  dplyr::filter(populacao == min(populacao)) %>% 
-  head()
+dim(pop2020SP)
 
 ```
 
-Pela função `dim()`, que nos dá as dimensões da base de dados, observamos que há 645 municípios no estado de São Paulo. Ao filtrar a observação com menor número de habitantes, vemos que o menor município de São Paulo, em relação à população, é Borá, com 838 habitantes.
+Após as limpezas da base, utilizando as funções `select()`, `rename()` e `mutate()`, utilizamos a função `dim()`, que nos dá as dimensões da base de dados, e observamos que há 645 municípios no estado de São Paulo.
+
+```{r}
+pop2020SP %>%
+  dplyr::filter(populacao == min(populacao)) %>% 
+  head()
+```
+Ao filtrar a observação com menor número de habitantes, vemos que o menor município de São Paulo, em relação à população, é Borá, com 838 habitantes.
+
 
 ### **Exercício III**
 
@@ -64,10 +70,73 @@ Agora vamos utilizar estatísticas para conhecer as caracterısticas de nossa ba
 
 ```{r}
 
-pop2020Limpa %>% 
+pop2020SP %>% 
   reframe(media_pop = mean(populacao, na.rm = T),
           mediana_pop = median(populacao, na.rm = T),
           desvio_pop = sd(populacao, na.rm = T),
           var_pop = var(populacao, na.rm = T))
+```
+
+
+### **Exercício IV**
+
+Note que essas estatısticas nao fornecem informacoes suficientes sobre a distribuicao da
+populacao. Crie um grafico de densidade que permita visualizar essa distribuicao (dica: use o pacote ggplot2).
+O que voce observa? Qual parece ser a medida mais adequada de tendencia central: a media ou a mediana?
+
+```{r}
+
+pop2020SP %>% 
+  ggplot(aes(x = populacao)) +
+  geom_density() +
+  scale_x_continuous(labels = scales::label_comma()) +
+  theme_bw() +
+  labs(title = 'Gráfico de Densidade dos municípios do Estado de SP')
 
 ```
+
+Através do gráfico de densidade, concluímos que para esse conjunto de dados a medida de tendência central mais adequada é a mediana, pois a média é empurrada para um número maior devido a algum caso discrepante, no caso, o município de SP, com mais de 12 milhões de habitantes.
+
+### **Exercício V**
+Agora crie novamente o grafico de densidade, mas apenas para os municıpios com menos
+de 50.000 habitantes.
+
+```{r}
+pop2020SP %>% 
+  dplyr::filter(populacao < 50000) %>% 
+  ggplot(aes(x = populacao)) +
+  geom_density() +
+  scale_x_continuous(labels = scales::label_comma()) +
+  theme_bw() +
+  labs(title = 'Gráfico de Densidade dos municípios do Estado de SP',
+       subtitle = 'Municípios com menos de 50 mil habitantes')
+```
+
+Quantos municıpios com menos de 50.000 ha? Em comparacao ao grafico anterior, o que voce observa?
+
+```{r}
+pop2020SP %>% 
+  dplyr::filter(populacao < 50000) %>%
+  nrow()
+```
+ 
+Há 504 muicípios no Estado de São Paulo com menos de 50 mil habitantes. Em relação ao gráfico anterior, conseguimos observar a distribuição dos municipios com maior clareza. Vemos, por exemplo, que a maior parte das cidades estão concentradas em 5 mil habitantes.
+
+
+### **Exercício VI**
+
+Para esta questao, importe novamente a base de dados original (para 2020).
+Calcule a media da populacao para cada um dos estados brasileiros e informe quais deles possuem maior e menor populacao media por municıpio.
+
+```{r}
+pop2020 <- ribge::populacao_municipios(2020)
+
+pop2020 %>% 
+  group_by(uf) %>% 
+  reframe(pop_media = mean(populacao, na.rm = T)) %>%
+  mutate(min_pop_media = min(pop_media),
+         max_pop_media = max(pop_media)) %>% 
+  filter(min_pop_media == pop_media | max_pop_media == pop_media) %>% 
+  head()
+```
+Vemos que o Estado do Distrito Federal é o com a maior média de população no país, em 2020. De modo inverso, o estado do Tocantins é aquele com a menor média populacional. 
