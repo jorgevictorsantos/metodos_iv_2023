@@ -50,7 +50,13 @@ pop2020SP <- pop2020 %>%
   mutate(municipio = toupper(municipio)) %>% 
   dplyr::filter(uf == 'SP')
 
-dim(pop2020SP)
+dim(pop2020SP) 
+
+# poderia ser:
+
+pop2020SP %>% 
+  reframe(qntdMunicipios = n(),
+          qntdMunicipios2 = n_distinct(municipio))
 
 ```
 
@@ -61,36 +67,37 @@ pop2020SP %>%
   dplyr::filter(populacao == min(populacao)) %>% 
   head()
 ```
-Ao filtrar a observação com menor número de habitantes, vemos que o menor município de São Paulo, em relação à população, é Borá, com 838 habitantes.
 
+Ao filtrar a observação com menor número de habitantes, vemos que o menor município de São Paulo, em relação à população, é Borá, com 838 habitantes.
 
 ### **Exercício III**
 
 Agora vamos utilizar estatísticas para conhecer as caracterısticas de nossa base de dados, especialmente da variavel "populacao". Para a variavel "populacao", calcule: (i) a media, (ii) a mediana, (iii) o desvio padrao e (iv) a variancia.
 
 ```{r}
+ 
+library(knitr)
 
 pop2020SP %>% 
   reframe(media_pop = mean(populacao, na.rm = T),
           mediana_pop = median(populacao, na.rm = T),
           desvio_pop = sd(populacao, na.rm = T),
-          var_pop = var(populacao, na.rm = T))
-```
+          var_pop = var(populacao, na.rm = T)) %>% 
+  kable(caption = "Resumo da população no estado de SP")
 
+```
 
 ### **Exercício IV**
 
-Note que essas estatısticas nao fornecem informacoes suficientes sobre a distribuicao da
-populacao. Crie um grafico de densidade que permita visualizar essa distribuicao (dica: use o pacote ggplot2).
-O que voce observa? Qual parece ser a medida mais adequada de tendencia central: a media ou a mediana?
+Note que essas estatısticas nao fornecem informacoes suficientes sobre a distribuicao da populacao. Crie um grafico de densidade que permita visualizar essa distribuicao (dica: use o pacote ggplot2). O que voce observa? Qual parece ser a medida mais adequada de tendencia central: a media ou a mediana?
 
 ```{r}
 
 pop2020SP %>% 
   ggplot(aes(x = populacao)) +
-  geom_density() +
+  geom_density(colour = 'red') +
   scale_x_continuous(labels = scales::label_comma()) +
-  theme_bw() +
+  theme_classic() +
   labs(title = 'Gráfico de Densidade dos municípios do Estado de SP')
 
 ```
@@ -98,14 +105,14 @@ pop2020SP %>%
 Através do gráfico de densidade, concluímos que para esse conjunto de dados a medida de tendência central mais adequada é a mediana, pois a média é empurrada para um número maior devido a algum caso discrepante, no caso, o município de SP, com mais de 12 milhões de habitantes.
 
 ### **Exercício V**
-Agora crie novamente o grafico de densidade, mas apenas para os municıpios com menos
-de 50.000 habitantes.
+
+Agora crie novamente o grafico de densidade, mas apenas para os municıpios com menos de 50.000 habitantes.
 
 ```{r}
 pop2020SP %>% 
   dplyr::filter(populacao < 50000) %>% 
   ggplot(aes(x = populacao)) +
-  geom_density() +
+  geom_density(fill = 'lightblue', alpha = 0.5) +
   scale_x_continuous(labels = scales::label_comma()) +
   theme_bw() +
   labs(title = 'Gráfico de Densidade dos municípios do Estado de SP',
@@ -119,14 +126,12 @@ pop2020SP %>%
   dplyr::filter(populacao < 50000) %>%
   nrow()
 ```
- 
-Há 504 muicípios no Estado de São Paulo com menos de 50 mil habitantes. Em relação ao gráfico anterior, conseguimos observar a distribuição dos municipios com maior clareza. Vemos, por exemplo, que a maior parte das cidades estão concentradas em 5 mil habitantes.
 
+Há 504 muicípios no Estado de São Paulo com menos de 50 mil habitantes. Em relação ao gráfico anterior, conseguimos observar a distribuição dos municipios com maior clareza. Vemos, por exemplo, que a maior parte das cidades estão concentradas em 5 mil habitantes.
 
 ### **Exercício VI**
 
-Para esta questao, importe novamente a base de dados original (para 2020).
-Calcule a media da populacao para cada um dos estados brasileiros e informe quais deles possuem maior e menor populacao media por municıpio.
+Para esta questao, importe novamente a base de dados original (para 2020). Calcule a media da populacao para cada um dos estados brasileiros e informe quais deles possuem maior e menor populacao media por municıpio.
 
 ```{r}
 pop2020 <- ribge::populacao_municipios(2020)
@@ -138,5 +143,14 @@ pop2020 %>%
          max_pop_media = max(pop_media)) %>% 
   filter(min_pop_media == pop_media | max_pop_media == pop_media) %>% 
   head()
+
+# PODERIA SER:
+pop2020 %>% 
+  group_by(uf) %>% 
+  reframe(pop_media = mean(populacao, na.rm = T)) %>%
+  filter(pop_media %in% c(max(pop_media),
+                          min(pop_media)))
+
 ```
-Vemos que o Estado do Distrito Federal é o com a maior média de população no país, em 2020. De modo inverso, o estado do Tocantins é aquele com a menor média populacional. 
+
+Vemos que o Estado do Distrito Federal é o com a maior média de população no país, em 2020. De modo inverso, o estado do Tocantins é aquele com a menor média populacional.
