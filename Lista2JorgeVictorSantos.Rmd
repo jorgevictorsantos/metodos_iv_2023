@@ -1,0 +1,120 @@
+---
+title: "Lista 2 - Métodos Quantitativos em Ciência Política IV"
+author: "Jorge Victor Bernardes dos Santos - 11250038"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+
+
+
+### **Exercício I**
+
+O pacote PNADcIBGE permite importar bases de dados diretamente para o environment do R. Primeiro, instale e ative o pacote. Depois, importe os dados do ultimo trimestre
+de 2017 (variaveis selecionadas) por meio do codigo abaixo.
+
+```{r, echo=FALSE}
+# Ver: https://cran.r-project.org/web/packages/PNADcIBGE/PNADcIBGE.pdf
+# Instale o pacote
+install.packages("PNADcIBGE")
+# Carregue o pacote
+library(PNADcIBGE)
+# Importe os dados desejados
+data <- get_pnadc(year=2017,
+                  quarter=4,
+                  selected=FALSE,
+                  vars=c("Ano", "Trimestre", "UF", "V2007", "VD4020", "VD4035"),
+                  design = F,
+                  savedir=tempdir())
+
+# Por raz~oes didaticas, selecionamos "design=FALSE" para ignorar o plano amostral.
+# Nao faca isso em sua pesquisa.
+
+# Selecione apenas as variaveis uteis para esta lista:
+
+library(tidyverse)
+
+# install.packages('tidylog')
+
+library(tidylog)
+
+data <- data %>%
+  select(Ano, Trimestre, UF, V2007, VD4020, VD4035)
+
+# Renomeie as variaveis:
+data <- data %>%
+  rename(Sexo = V2007,
+         Renda = VD4020,
+         Horas_trabalhadas = VD4035)
+
+```
+
+
+
+
+### **Exercício II**
+
+Calcule:
+i) a renda media;
+ii) a variancia da renda;
+
+```{r}
+names(data)
+
+data %>% 
+  reframe(media_renda = mean(Renda, na.rm = T),
+          var_renda = var(Renda, na.rm = T))
+```
+
+
+
+iii) a renda media dos homens e das mulheres;
+
+```{r}
+data %>% 
+  group_by(Sexo) %>% 
+  reframe(media_renda_sexo = mean(Renda,na.rm = T)) %>% 
+  pivot_wider(names_from = Sexo, values_from = media_renda_sexo)
+
+```
+
+iv) a renda media em cada estado brasileiro;
+```{r}
+data %>% 
+  group_by(UF) %>% 
+  reframe(media_renda_uf = mean(Renda, na.rm = T))
+```
+
+
+v) a covariancia entre a renda e o numero de horas trabalhadas
+
+```{r}
+data %>% 
+  summarise(cov_renda_horas = cov(Renda, Horas_trabalhadas))
+
+```
+
