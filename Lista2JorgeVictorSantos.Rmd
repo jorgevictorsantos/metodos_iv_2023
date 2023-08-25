@@ -40,7 +40,7 @@ de 2017 (variaveis selecionadas) por meio do codigo abaixo.
 ```{r, echo=FALSE}
 # Ver: https://cran.r-project.org/web/packages/PNADcIBGE/PNADcIBGE.pdf
 # Instale o pacote
-install.packages("PNADcIBGE")
+# install.packages("PNADcIBGE")
 # Carregue o pacote
 library(PNADcIBGE)
 # Importe os dados desejados
@@ -60,7 +60,7 @@ library(tidyverse)
 
 # install.packages('tidylog')
 
-library(tidylog)
+# library(tidylog)
 
 data <- data %>%
   select(Ano, Trimestre, UF, V2007, VD4020, VD4035)
@@ -83,11 +83,17 @@ i) a renda media;
 ii) a variancia da renda;
 
 ```{r}
+
+library(knitr)
+
 names(data)
 
 data %>% 
   reframe(media_renda = mean(Renda, na.rm = T),
-          var_renda = var(Renda, na.rm = T))
+          var_renda = var(Renda, na.rm = T)) %>% 
+  kable(caption = 'Média e variância de Renda')
+  
+
 ```
 
 
@@ -98,7 +104,8 @@ iii) a renda media dos homens e das mulheres;
 data %>% 
   group_by(Sexo) %>% 
   reframe(media_renda_sexo = mean(Renda,na.rm = T)) %>% 
-  pivot_wider(names_from = Sexo, values_from = media_renda_sexo)
+  pivot_wider(names_from = Sexo, values_from = media_renda_sexo) %>% 
+  kable(caption = 'Renda média de homens e mulheres')
 
 ```
 
@@ -106,15 +113,42 @@ iv) a renda media em cada estado brasileiro;
 ```{r}
 data %>% 
   group_by(UF) %>% 
-  reframe(media_renda_uf = mean(Renda, na.rm = T))
+  reframe(media_renda_uf = mean(Renda, na.rm = T)) %>% 
+  kable(caption = 'Renda média dos estados')
 ```
 
 
 v) a covariancia entre a renda e o numero de horas trabalhadas
 
 ```{r}
-data %>% 
-  summarise(cov_renda_horas = cov(Renda, Horas_trabalhadas))
+data %>%
+  drop_na() %>% 
+  summarise(cov_renda_horas = cov(x = Renda, y = Horas_trabalhadas)) %>%
+  kable(caption = 'Covariância entre a renda e horas trabalhadas')
 
+```
+
+
+
+### **Exercício III**
+
+
+Exemplifique a veracidade da equacao, considerando X = Renda, Y = Horas trabalhadas, a = 2 e b = 3.
+
+E[aX + bY] = a × E[X] + b × E[Y]
+
+```{r}
+a <- 2
+b <- 3
+attach(data)
+
+mean(a * Renda + b * Horas_trabalhadas, na.rm = T)
+
+(a * mean(Renda, na.rm = T)) + (b * mean(Horas_trabalhadas, na.rm = T))
+
+mean(a * Renda + b * Horas_trabalhadas, na.rm = T) == (a * mean(Renda, na.rm = T)) + (b * mean(Horas_trabalhadas, na.rm = T))
+
+
+                                
 ```
 
