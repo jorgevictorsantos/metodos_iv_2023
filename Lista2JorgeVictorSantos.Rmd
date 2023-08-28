@@ -3,41 +3,23 @@ title: "Lista 2 - Métodos Quantitativos em Ciência Política IV"
 author: "Jorge Victor Bernardes dos Santos - 11250038"
 date: "`r Sys.Date()`"
 output: pdf_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include=FALSE} 
+knitr::opts_chunk$set(warning = FALSE, message = FALSE) 
 ```
-
-## R Markdown
-
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
-
-
-
 
 ### **Exercício I**
 
-O pacote PNADcIBGE permite importar bases de dados diretamente para o environment do R. Primeiro, instale e ative o pacote. Depois, importe os dados do ultimo trimestre
-de 2017 (variaveis selecionadas) por meio do codigo abaixo.
+O pacote PNADcIBGE permite importar bases de dados diretamente para o
+environment do R. Primeiro, instale e ative o pacote. Depois, importe os
+dados do ultimo trimestre de 2017 (variaveis selecionadas) por meio do
+codigo abaixo.
 
-```{r, echo=FALSE}
+```{r}
 # Ver: https://cran.r-project.org/web/packages/PNADcIBGE/PNADcIBGE.pdf
 # Instale o pacote
 # install.packages("PNADcIBGE")
@@ -58,10 +40,6 @@ data <- get_pnadc(year=2017,
 
 library(tidyverse)
 
-# install.packages('tidylog')
-
-# library(tidylog)
-
 data <- data %>%
   select(Ano, Trimestre, UF, V2007, VD4020, VD4035)
 
@@ -73,20 +51,17 @@ data <- data %>%
 
 ```
 
-
-
-
 ### **Exercício II**
 
 Calcule:
+
 i) a renda media;
+
 ii) a variancia da renda;
 
 ```{r}
 
 library(knitr)
-
-names(data)
 
 data %>% 
   reframe(media_renda = mean(Renda, na.rm = T),
@@ -96,29 +71,28 @@ data %>%
 
 ```
 
-
-
 iii) a renda media dos homens e das mulheres;
 
 ```{r}
 data %>% 
   group_by(Sexo) %>% 
   reframe(media_renda_sexo = mean(Renda,na.rm = T)) %>% 
-  pivot_wider(names_from = Sexo, values_from = media_renda_sexo) %>% 
+  pivot_wider(names_from = Sexo, values_from = media_renda_sexo) %>%
   kable(caption = 'Renda média de homens e mulheres')
 
 ```
 
 iv) a renda media em cada estado brasileiro;
+
 ```{r}
 data %>% 
   group_by(UF) %>% 
   reframe(media_renda_uf = mean(Renda, na.rm = T)) %>% 
+  arrange(-media_renda_uf) %>% 
   kable(caption = 'Renda média dos estados')
 ```
 
-
-v) a covariancia entre a renda e o numero de horas trabalhadas
+v)  a covariancia entre a renda e o numero de horas trabalhadas
 
 ```{r}
 data %>%
@@ -128,27 +102,148 @@ data %>%
 
 ```
 
-
-
 ### **Exercício III**
 
+Exemplifique a veracidade da equacao, considerando X = Renda, Y = Horas
+trabalhadas, a = 2 e b = 3.
 
-Exemplifique a veracidade da equacao, considerando X = Renda, Y = Horas trabalhadas, a = 2 e b = 3.
-
-E[aX + bY] = a × E[X] + b × E[Y]
+E[aX + bY] = a x E[X] + b x E[Y]
 
 ```{r}
 a <- 2
 b <- 3
-attach(data)
 
-mean(a * Renda + b * Horas_trabalhadas, na.rm = T)
-
-(a * mean(Renda, na.rm = T)) + (b * mean(Horas_trabalhadas, na.rm = T))
-
-mean(a * Renda + b * Horas_trabalhadas, na.rm = T) == (a * mean(Renda, na.rm = T)) + (b * mean(Horas_trabalhadas, na.rm = T))
+# cada lado da expressão:
 
 
-                                
+cat('E[aX + bY] = ', mean(a * data$Renda + b * data$Horas_trabalhadas, na.rm = T), '\n') # E[aX + bY]
+
+cat('a*E[X] + b*E[Y] =', (a * mean(data$Renda, na.rm = T)) + (b * mean(data$Horas_trabalhadas, na.rm = T)),'\n') # aE[X] + bE[Y]
+
+# Assim:
+
+cat('E[aX + bY] == a*E[X] + b*E[Y]', mean(a * data$Renda + b * data$Horas_trabalhadas, na.rm = T) == (a * mean(data$Renda, na.rm = T)) + (b *mean(data$Horas_trabalhadas, na.rm = T)))
+
+
 ```
 
+### **Exercício IV**
+
+Apresente um grafico que permita visualizacao adequada da media da renda
+por estado brasileiro e sexo.
+
+```{r}
+
+data %>% 
+  group_by(Sexo, UF) %>% 
+  reframe(mediaRenda = mean(Renda, na.rm = T)) %>%
+  ggplot(aes(x = reorder(UF, mediaRenda), 
+             y = mediaRenda,
+             fill = Sexo,
+             colors = Sexo)) + 
+  geom_bar(position = 'dodge', 
+           stat = 'identity') +
+  theme_bw()+
+  labs(title = 'Média de Renda por Estados e Sexo') +
+  xlab('Estados') + 
+  ylab('Média de renda') +
+  coord_flip()
+
+```
+
+### **Exercício V**
+
+Agora trabalharemos explicitamente com a esperanca condicional. Note que
+essa logica estava implıcita nas questoes anteriores. Assuma duas
+variaveis aleatorias, X e Y, tais que X = renda e Y = horas trabalhadas.
+
+Calcule:
+
+i) E[X | 10 <= Y <= 20]
+
+```{r}
+data %>% 
+  dplyr::filter(Horas_trabalhadas >= 10 & Horas_trabalhadas <= 20) %>% 
+  reframe(mediaRendaHoras = mean(Renda, na.rm = T)) %>% 
+  kable(caption = 'Média de Renda tal que 10 >= horas trabalhadas <= 20')
+```
+
+ii) E[X | Y >= 20]
+
+```{r}
+data %>% 
+  dplyr::filter(Horas_trabalhadas >= 20) %>%
+  reframe(mediaRendaHoras1 = mean(Renda, na.rm = T)) %>% 
+  kable(caption = 'Média de Renda para 10 e 20 horas trabalhadas')
+
+```
+
+### **Exercício VI**
+
+*Para os itens seguintes (i a iv), remova todas as observacoes cuja renda seja superior a 10.000 reais.*
+
+i)  apresente um grafico de densidade da variavel renda. Interprete;
+
+```{r}
+data %>% 
+  dplyr::filter(Renda <= 10000) %>% 
+  ggplot(aes(x = Renda)) +
+  geom_density(fill = 'red', color = 'red',
+               alpha = 0.5) + 
+  labs(title = 'Gráfico de densidade da Renda',
+       subtitle = 'Renda inferior a R$ 10.000') +
+  theme_bw()
+  
+```
+
+Com esse recorte de 10 mil reais na renda, observa-se maior concentração
+dos dados em torno de 1 mil a 2 mil reais.
+
+ii) qual e a probabilidade de que, ao retirarmos aleatoriamente uma
+    observacao (um indivıduo) dessa base de dados, sua renda seja
+    estritamente maior do que 1000 e estritamente menor do que 2000
+    reais? Apenas para propositos didaticos, ignore o erro amostral e
+    trate a sua base de dados como uma populacao (nao faca isso em sua
+    pesquisa);
+
+```{r}
+data %>%
+  dplyr::filter(Renda <= 10000) %>% 
+  mutate(n_TotalMenos10000 = n()) %>%
+  filter(Renda >= 1000 & Renda <= 2000) %>%
+  mutate(n_entre1000_2000 = n(),
+         prob1000_2000 = n_entre1000_2000/n_TotalMenos10000) %>% 
+  group_by(prob1000_2000) %>% 
+  summarise() %>% 
+  kable(caption = 'Probabilidade de retirar uma observação \n com renda entre 1 e 2 mil reais com recorte inferior a 10 mil reais')
+
+```
+
+iii) apresente um grafico de densidade da renda dado que as horas
+     trabalhadas (Y) sejam menores ou iguais a 20;
+
+```{r}
+data %>%
+  dplyr::filter(Renda <= 10000 & Horas_trabalhadas <= 20) %>%
+  ggplot(aes(x = Renda)) + 
+  geom_density(fill = 'red', color = 'red',
+               alpha = 0.5) + 
+  labs(title = 'Gráfico de densidade da Renda',
+       subtitle = 'Observações com renda inferior a R$ 10.000 e horas trabalhadas menores ou iguais a 20 horas') +
+  theme_bw()
+```
+
+iv) calcule: P(1000 < X < 2000 |Y <= 20)
+
+```{r}
+data %>%
+  dplyr::filter(Renda <= 10000 & Horas_trabalhadas <= 20) %>% 
+  mutate(n_Renda10000Horas20 = n()) %>%
+  filter(Renda >= 1000 & Renda <= 2000) %>%
+  mutate(n_entre1000_2000 = n(),
+         prob1000_2000 = n_entre1000_2000/n_Renda10000Horas20) %>% 
+  group_by(prob1000_2000) %>% 
+  summarise() %>% 
+  kable(caption = 'Probabilidade de retirar uma observação \n com renda entre 1 e 2 mil reais tal que horas trabalhadas sejam inferiores ou iguais a 20 horas e Renda inferior a 10 mil reais')
+  
+```
