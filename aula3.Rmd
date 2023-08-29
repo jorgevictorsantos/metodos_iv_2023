@@ -1,0 +1,185 @@
+---
+title: "Aula 3"
+author: "Jorge Victor Santos"
+date: "2023-08-22"
+output: pdf_document
+---
+
+## Variância
+
+O quanto meus dados variam em torno da média. A soma dos desvios de X em relação à esperança de X.
+
+Covariância de X e Y: mensura como as duas variáveis desviam em relação a outra. A correlação é a covariãncia dividida pelo número de observações.
+
+Exemplo de que a Esperança de X + Y é igual à esperança de X mais a esperança de Y, separados.
+
+```{r}
+x <- 1:12
+y <- rep(5, 12)
+
+mean(x + y) #11.5
+mean(x) #6.5
+mean(y) # 5
+
+mean(x + y) == mean(y) + mean(x)
+```
+
+teste da linearidade da esperança
+
+```{r}
+a <- 3
+b <- 4
+
+mean(a*x + b*y)
+
+mean(a*x)
+mean(b*y)
+
+a * mean(x)
+b * mean(y)
+
+mean(a*x + b*y) == mean(a*x)+mean(b*y)
+
+mean(a*x + b*y) == a * mean(x) + b * mean(y)
+```
+
+## Distribuição de probabilidade conjunta
+
+```{r}
+install.packages('kableExtra')
+library(knitr)
+library(dplyr)
+library(kableExtra)
+#Definir o espaço amostral
+
+espaco_amostral <- expand.grid(1:4, 1:4)
+espaco_amostral$X <- espaco_amostral$Var1 + espaco_amostral$Var2
+espaco_amostral$Y <- pmax(espaco_amostral$Var1, espaco_amostral$Var2)
+
+# Criar a tabela
+kable(espaco_amostral, col.names = c("resultado do primeiro dado", "resultado do segundo dado", "X", "Y"),
+                caption = "Tabela representando a soma (X) and o maior valor (Y) do lançamento de dois dados de quatro lados") %>%
+ kable_styling(bootstrap_options = "striped")
+```
+
+```{r}
+# Definir os valores de (x, y) e P(X = x, Y = y)
+valores <- c("(2, 1)", "(3, 2)", "(4, 2)", "(4, 3)", "(5, 3)", "(5, 4)", "(6, 3)", "(6, 4)", "(7, 4)", "(8, 4)")
+probabilidades <- c(0.0625, 0.1250, 0.0625, 0.1250, 0.1250, 0.1250, 0.0625, 0.1250, 0.1250, 0.0625)
+
+# Criar a tabela
+tabela <- data.frame("(x, y)" = valores, "P(X = x, Y = y)" = probabilidades)
+
+# Formatar a tabela
+kable(tabela, caption = "Tabela representando a distribuição conjunta da soma (X) e o maior (Y) de dois lançamentos de um dado de quatro faces",
+                          col.names = c("$(X,Y)$", "$P(X=x, Y=y)$")) %>%
+  kable_styling(bootstrap_options = "striped")
+```
+
+
+## Introdução à simulação
+
+Situações úteis para simulação:
+
+i.  conta que o computador faz pra gente;
+
+Análise combinatória
+
+**Função de Stirling**
+
+```{r}
+# especificando semente, para simulação ser reproduzível
+set.seed(2) # o número que parte para gerar "números aletórios"
+
+# número de amostras
+stirling_aprox <- function(n) {
+  result <- sqrt(2 * pi)*n ^(n+1/2) *exp(-n)
+  print(result)
+}
+
+stirling_aprox(140)
+```
+
+
+```{r}
+fatorial <- function(n){
+  x <- 1
+  produto <- 1
+  while (x <= n) {
+    produto <- produto * x
+    x <- x + 1
+  }
+  cat("O fatorial de",n,"é igual a:",produto)
+}
+
+fatorial(100)
+```
+
+
+**simulação de probabilidade de sair o número 6 de um dado de 6 faces**
+
+```{r}
+# especificando semente, para simulação ser reproduzível
+set.seed(234)
+# número de amostras
+n <- 100000
+
+# 1000 amostras de uma lançamento de dado de 6 lados
+resultado <- sample(1:6, n, TRUE)
+
+
+# frequência relativade 6 é dada por número de 6 / total de amostras
+prob_6 <- sum(resultado == 6)/n
+
+# 16,89%
+# 1/6 = 16.6666
+```
+
+função da probabilidade com esse tipo de dado
+
+```{r}
+set.seed(234)
+
+probDado6 <- function(x, n = 1000){
+  # set.seed(234)
+  resultado <- sample(1:6, n, T)
+  prob <- sum(resultado == 6)/n
+  print(prob)
+}
+
+probDado6(5)
+probDado6(3)
+probDado6(1)
+probDado6(6)
+```
+
+*Análise de sensibilidade*
+
+```{r}
+# especificando semente, para simulação ser reproduzível
+set.seed(234)
+
+# número de amostras
+vec_amostra <- c(100, 1000, 10000, 100000, 1000000)
+
+# lista vazia para armazenar os resultados das simulações
+resultado_lista <- list()
+
+# vetor vazio para armazenar a frequência relativa de 6
+vec_prob6 <- numeric()
+
+set.seed(234)
+# loop sobre os tamanhos das amostrar
+for ( i in 1:length(vec_amostra)) {
+  # n amostras de uma lançamento de dado de 6 lados
+  resultado_lista[[i]] <- sample(1:6, vec_amostra[i], TRUE)
+
+  # frequência relativade 6 é dada por número de 6 / total de amostras
+  vec_prob6[i] <- sum(resultado_lista[[i]] == 6)/vec_amostra[i]
+
+}
+
+print(vec_prob6)
+```
+
+

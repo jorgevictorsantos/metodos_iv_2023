@@ -41,7 +41,7 @@ data <- get_pnadc(year=2017,
 library(tidyverse)
 
 data <- data %>%
-  select(Ano, Trimestre, UF, V2007, VD4020, VD4035)
+  select(Ano, Trimestre, UF, V1028, V2007, VD4020, VD4035)
 
 # Renomeie as variaveis:
 data <- data %>%
@@ -113,16 +113,23 @@ E[aX + bY] = a x E[X] + b x E[Y]
 a <- 2
 b <- 3
 
+data2 <- data %>% 
+  drop_na()
+
 # cada lado da expressão:
 
 
-cat('E[aX + bY] = ', mean(a * data$Renda + b * data$Horas_trabalhadas, na.rm = T), '\n') # E[aX + bY]
+cat('E[aX + bY] = ', mean(a * data2$Renda + b * data2$Horas_trabalhadas), '\n') # E[aX + bY]
 
-cat('a*E[X] + b*E[Y] =', (a * mean(data$Renda, na.rm = T)) + (b * mean(data$Horas_trabalhadas, na.rm = T)),'\n') # aE[X] + bE[Y]
+cat('a*E[X] + b*E[Y] =', (a * mean(data2$Renda)) + (b * mean(data2$Horas_trabalhadas)),'\n') # aE[X] + bE[Y]
 
 # Assim:
 
-cat('E[aX + bY] == a*E[X] + b*E[Y]', mean(a * data$Renda + b * data$Horas_trabalhadas, na.rm = T) == (a * mean(data$Renda, na.rm = T)) + (b *mean(data$Horas_trabalhadas, na.rm = T)))
+cat('E[aX + bY] == a*E[X] + b*E[Y]:', mean(a * data2$Renda + b * data2$Horas_trabalhadas) == (a * mean(data2$Renda)) + (b *mean(data2$Horas_trabalhadas)))
+
+esquerdo <- mean(a * data2$Renda + b * data2$Horas_trabalhadas)
+direito <- (a * mean(data2$Renda)) + (b * mean(data2$Horas_trabalhadas))
+all.equal(esquerdo,direito)
 
 
 ```

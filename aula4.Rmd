@@ -1,0 +1,214 @@
+---
+title: "Aula 4"
+author: "Jorge Victor Santos"
+date: "2023-08-29"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Ver: https://cran.r-project.org/web/packages/PNADcIBGE/PNADcIBGE.pdf
+# Instale o pacote
+# install.packages("PNADcIBGE")
+# Carregue o pacote
+library(PNADcIBGE)
+# Importe os dados desejados
+data <- get_pnadc(year=2017,
+                  quarter=4,
+                  selected=FALSE,
+                  vars=c("Ano", "Trimestre", "UF", "V2007", "VD4020", "VD4035"),
+                  design = F,
+                  savedir=tempdir())
+
+# Por raz~oes didaticas, selecionamos "design=FALSE" para ignorar o plano amostral.
+# Nao faca isso em sua pesquisa.
+
+# Selecione apenas as variaveis uteis para esta lista:
+
+library(tidyverse)
+
+data <- data %>%
+  select(Ano, Trimestre, UF, V1028, V2007, VD4020, VD4035)
+
+# Renomeie as variaveis:
+data <- data %>%
+  rename(Sexo = V2007,
+         Renda = VD4020,
+         Horas_trabalhadas = VD4035)
+
+
+```
+
+
+Para fazer equação em Rmarkdown:
+
+$x + y$
+
+$x \sim norm(0,1)$
+
+\$ \alpha + \beta \$
+
+Por que dá false no exercício 3? O R é finito, de modo que números inexistentes no R são aproximados nos cálculos.
+
+## Simulação
+
+X \<- sample(1:4, size=1)
+
+Como quero a frequência de longo prazo, preciso repetir esse processo (de maneira independente a cada jogada) $N$ vezes.
+
+```{r}
+
+set.seed(36)
+
+# número de jogadas/simulações
+n <- 1000
+
+# vetor X, para armazenar o resultado de cada uma das n jogadas
+X <- numeric()
+
+# simulando n vezes
+for( i in 1:n){
+  X[i] <- sample(1:4, size=1)
+}
+
+
+# visualizando as primeiras 20 jogadas
+head(X, 20)
+```
+
+## Frequência de cada número
+
+```{r}
+# prob X = 1
+sum(X==1)/n
+sum(X==2)/n
+sum(X==3)/n
+sum(X==4)/n
+
+summary(X)
+
+```
+
+## Análise de sensibilidade
+
+Como estamos simulando e aproximando com um $n$ finito o que deveria ser infinito, temos de saber se nossa aproximação é boa. Se sabemos a verdade, podemos calcular como o erro se comporta com o $n$ que escolhemos, ou ver como muda à medida que o $n$ cresce. Vamos fazer isso.
+
+```{r}
+# número de jogadas/simulações
+n <- 100000
+
+# vetor X, para armazenar o resultado de cada uma das n jogadas
+X <- numeric()
+
+# número de replicações da simulação
+k <- 100
+
+# vetor para armazenar o erro medio
+erro_medio <- numeric()
+
+# simulando n vezes
+for (j in 1:k) {
+  
+  for( i in 1:n){
+    X[i] <- sample(1:4, size=1)
+  }
+  p1 <- sum(X==1)/n
+  p2 <- sum(X==2)/n
+  p3 <- sum(X==3)/n
+  p4 <- sum(X==4)/n
+  erro_medio[j] = (abs(p1 - .25) + abs(p2 - .25) + abs(p3 - .25) + abs(p3 - .25)) /4
+}
+
+summary(erro_medio)
+```
+
+Cross-validation ou validação cruzada:
+
+## Regressão
+
+"Tem uma origem na eugenia". Galton, no século XIX, queria demonstrar que filhos de pais altos tenderiam a ser mais altos com o passar das gerações. A ideia de "regressão" é a tendência de regreir à média, o que Galton observou nos dados coletados. Modelar os fenômenos em torno da média.
+
+Regressão $\neq$ regressão linear
+
+A regressão linear é o melhor que existe entre os lineares.
+
+CEF: Conditional Expectation Function - "Função da Esperança Condicional"
+
+O que é a CEF? Envolve a esperança condicional. Interesse em prever ou explicar a amargem de vitória ou a diferença percentual em uma eleição de dois candidatos.
+
+Margem de vitória = Y\
+Pesquisa de intenção de voto = X\
+
+Tentar estimar a esperança condicional de Y dado X.\
+Y = variável dependente / resposta / resultado / explicada / regressando\
+X = variável independente / explicativa / preditor / input / regressor\
+
+Geralmente, vamos explicar o efeito de **uma** variável sobre o fenômeno de interesse. Isto é, estudamos o *efeito da causa*, que é $X \rightarrow Y$, respondendo à pergunta "X causa Y?", ao invés da *causa dos efeitos*.
+
+Modelos preditivos\
+Para prever é preciso ter uma métrica, a mais utilizada é o *erro quadrático médio* (EQM).\
+Exemplo:\
+Y = margem de vitória\
+m = previsão de margem para cada eleição\
+Y1 - m1 = l1\
+Y2 - m2 = l2\
+Y3 - m3 = l3\
+EQM = $l1^2 + l2^2 + l3^2$
+
+A CEF é o melhor preditor global possível, tendo o menor EQM.\
+Aprendemos em termos de esperança condicional, usando regressão linear para aproximar essa esperança, observando, assim, em que condições a regressão linear se aproxima à CEF.
+
+### Análise dos dados
+
+```{r}
+
+df <- data %>%
+  filter(!is.na(Renda)) %>%
+  filter(!is.na(Horas_trabalhadas)) %>%
+  filter(Renda > 0) %>%
+  filter(Horas_trabalhadas > 0) %>%
+  mutate(salarioHora = Renda/(4.5*Horas_trabalhadas)) %>%
+    mutate(log_salario = log(salarioHora)) %>%
+  mutate(genero = as.character(Sexo))
+
+df %>%
+  ggplot(aes(salarioHora)) + geom_density(aes(weight=V1028)) + theme_bw(base_size = 10)
+
+```
+
+```{r}
+df %>%
+  ggplot(aes(log_salario)) + 
+  geom_density(color = 'blue') +
+  geom_density(aes(weight=V1028),
+               color = 'red') + 
+  theme_bw(base_size = 10)
+
+```
+
+```{r}
+
+weighted.mean(log(df$salarioHora),w = df$V1028)
+
+weighted.mean(df$salarioHora, w = df$V1028)
+
+
+
+```
+# índice de Gini
+
+```{r}
+install.packages('dineq')
+library(dineq)
+
+df %>% group_by(genero) %>% 
+  reframe(dp_renda_genero = sd(salarioHora),
+          dp_logrenda_genero = sd(log_salario),
+          gini = gini.wtd(salarioHora, weights = V1028))
+
+
+```
+
